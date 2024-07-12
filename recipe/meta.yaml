@@ -29,6 +29,7 @@ requirements:
     - re2
     - sentencepiece
     - utf8proc
+    - pybind11
   run:
     - python
     - requests
