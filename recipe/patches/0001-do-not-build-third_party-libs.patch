@@ -1,0 +1,69 @@
+Unvendor third_party libraries
+
+Index: text/CMakeLists.txt
+===================================================================
+--- text.orig/CMakeLists.txt	2024-07-12 16:10:25.652112125 -0500
++++ text/CMakeLists.txt	2024-07-12 17:01:15.515692219 -0500
+@@ -63,5 +63,6 @@
+ 
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_COMPILED_WITH_CXX_ABI} -Wall ${TORCH_CXX_FLAGS}")
+ 
+-add_subdirectory(third_party)
++find_package(re2 REQUIRED)
++find_package(double-conversion REQUIRED)
+ add_subdirectory(torchtext/csrc)
+Index: text/torchtext/csrc/CMakeLists.txt
+===================================================================
+--- text.orig/torchtext/csrc/CMakeLists.txt	2024-07-12 16:10:25.700552678 -0500
++++ text/torchtext/csrc/CMakeLists.txt	2024-07-12 16:20:55.784309409 -0500
+@@ -18,10 +18,6 @@
+ set(
+   LIBTORCHTEXT_INCLUDE_DIRS
+   ${PROJECT_SOURCE_DIR}
+-  ${PROJECT_SOURCE_DIR}/third_party/sentencepiece/src
+-  $<TARGET_PROPERTY:re2,INCLUDE_DIRECTORIES>
+-  $<TARGET_PROPERTY:double-conversion,INCLUDE_DIRECTORIES>
+-  $<TARGET_PROPERTY:utf8proc,INCLUDE_DIRECTORIES>
+   ${TORCH_INSTALL_PREFIX}/include
+   ${TORCH_INSTALL_PREFIX}/include/torch/csrc/api/include
+   )
+@@ -119,10 +115,6 @@
+   set(
+     EXTENSION_INCLUDE_DIRS
+     ${PROJECT_SOURCE_DIR}
+-    ${PROJECT_SOURCE_DIR}/third_party/sentencepiece/src
+-    $<TARGET_PROPERTY:re2,INCLUDE_DIRECTORIES>
+-    $<TARGET_PROPERTY:double-conversion,INCLUDE_DIRECTORIES>
+-    $<TARGET_PROPERTY:utf8proc,INCLUDE_DIRECTORIES>
+     ${TORCH_INSTALL_PREFIX}/include
+     ${TORCH_INSTALL_PREFIX}/include/torch/csrc/api/include
+     )
+Index: text/setup.py
+===================================================================
+--- text.orig/setup.py	2024-07-12 16:38:24.815733730 -0500
++++ text/setup.py	2024-07-12 16:38:33.250122070 -0500
+@@ -89,7 +89,6 @@
+                 shutil.rmtree(str(path), ignore_errors=True)
+ 
+ 
+-_init_submodule()
+ setup_info = dict(
+     # Metadata
+     name="torchtext",
+Index: text/tools/setup_helpers/extension.py
+===================================================================
+--- text.orig/tools/setup_helpers/extension.py	2024-07-12 16:10:25.699502264 -0500
++++ text/tools/setup_helpers/extension.py	2024-07-12 16:48:02.036352808 -0500
+@@ -64,9 +64,10 @@
+         cfg = "Debug" if self.debug else "Release"
+ 
+         cmake_args = [
++            "-GNinja",
+             f"-DCMAKE_BUILD_TYPE={cfg}",
+-            f"-DCMAKE_PREFIX_PATH={torch.utils.cmake_prefix_path}",
+-            f"-DCMAKE_INSTALL_PREFIX={extdir}",
++            f"-DCMAKE_PREFIX_PATH={os.environ['PREFIX']}",
++            f"-DCMAKE_INSTALL_PREFIX={os.environ['PREFIX']}",
+             "-DCMAKE_VERBOSE_MAKEFILE=ON",
+             f"-DPython_INCLUDE_DIR={distutils.sysconfig.get_python_inc()}",
+             f"-DTORCH_INSTALL_PREFIX:STRING={os.path.dirname(torch.__file__)}",
